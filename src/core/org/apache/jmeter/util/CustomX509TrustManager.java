@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Custom TrustManager ignores all certificate errors
+ * Custom TrustManager optionally ignores all certificate errors
  *
  * TODO: implement conditional checking and logging
  *
@@ -37,22 +37,24 @@ import org.slf4j.LoggerFactory;
 public class CustomX509TrustManager implements X509TrustManager
 {
     private final X509TrustManager defaultTrustManager;
+    private final boolean checkCertificates;
 
     private static final Logger log = LoggerFactory.getLogger(CustomX509TrustManager.class);
 
-    public CustomX509TrustManager(final X509TrustManager defaultTrustManager) {
+    public CustomX509TrustManager(final X509TrustManager defaultTrustManager, final boolean checkCertificates) {
         super();
         if (defaultTrustManager == null) {
             throw new IllegalArgumentException("Trust manager may not be null");
         }
         this.defaultTrustManager = defaultTrustManager;
+        this.checkCertificates = checkCertificates;
     }
 
     /**
      * @see javax.net.ssl.X509TrustManager#checkClientTrusted(X509Certificate[],String)
      */
     @Override
-    public void checkClientTrusted(X509Certificate[] certificates, String authType) {
+    public void checkClientTrusted(X509Certificate[] certificates, String authType) throws CertificateException {
         if (log.isDebugEnabled() && certificates != null) {
             for (int i = 0; i < certificates.length; i++) {
                 X509Certificate cert = certificates[i];
@@ -70,6 +72,10 @@ public class CustomX509TrustManager implements X509TrustManager
                         cert.getNotAfter(),
                         cert.getIssuerDN());
             }
+        }
+
+        if (checkCertificates) {
+            this.defaultTrustManager.checkClientTrusted(certificates, authType);
         }
     }
 
@@ -95,6 +101,10 @@ public class CustomX509TrustManager implements X509TrustManager
                         cert.getNotAfter(),
                         cert.getIssuerDN());
             }
+        }
+
+        if (checkCertificates) {
+            this.defaultTrustManager.checkServerTrusted(certificates, authType);
         }
     }
 

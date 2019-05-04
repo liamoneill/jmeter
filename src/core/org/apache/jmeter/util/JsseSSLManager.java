@@ -63,6 +63,9 @@ public class JsseSSLManager extends SSLManager {
     private static final boolean SHARED_SESSION_CONTEXT =
         JMeterUtils.getPropDefault("https.sessioncontext.shared",false); // $NON-NLS-1$
 
+    private static final boolean CHECK_CERTIFICATES =
+        JMeterUtils.getPropDefault("custom.https.check_certificates", false);
+
     /**
      * Characters per second, used to slow down sockets
      */
@@ -240,7 +243,8 @@ public class JsseSSLManager extends SSLManager {
         for (int i = 0; i < trustmanagers.length; i++) {
             if (trustmanagers[i] instanceof X509TrustManager) {
                 trustmanagers[i] = new CustomX509TrustManager(
-                    (X509TrustManager)trustmanagers[i]);
+                    (X509TrustManager)trustmanagers[i],
+                    CHECK_CERTIFICATES);
             }
         }
         context.init(newManagers, trustmanagers, this.rand);
